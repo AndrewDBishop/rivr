@@ -2,6 +2,11 @@
 [![Javadocs](https://www.javadoc.io/badge/com.nuecho/rivr-voicexml.svg)](https://nuecho.github.io/rivr/javadoc/)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.nuecho/rivr-voicexml/badge.svg?cache=foo)](https://maven-badges.herokuapp.com/maven-central/com.nuecho/rivr-voicexml)
 
+## Andrew's Updates
+
+I have updated the source code to work with Java 17, but I am not a Gradle guy at all, so I broke most of the Gradle build stuff to get this to compile.
+If one of the NuEcho guys finds this, feel free to grab all my work and update your version to publish to Maven Central. 
+For now the only way to use this is to build the jars locally and add them to your project manually. Being a Maven guy I just added a lib folder under my src/main/resources to hold the jars and reference them in my pom.xml as system dependencies.
 ## Overview
 
 Rivr is a lightweight open-source dialogue engine enabling Java developers to easily create enterprise-grade VoiceXML applications.
