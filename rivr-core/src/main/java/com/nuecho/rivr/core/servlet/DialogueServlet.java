@@ -6,12 +6,9 @@ package com.nuecho.rivr.core.servlet;
 
 import java.io.*;
 import java.util.*;
-
-import javax.servlet.*;
-import javax.servlet.http.*;
-
+import jakarta.servlet.*;
+import jakarta.servlet.http.*;
 import org.slf4j.*;
-
 import com.nuecho.rivr.core.channel.*;
 import com.nuecho.rivr.core.channel.synchronous.*;
 import com.nuecho.rivr.core.channel.synchronous.step.*;
@@ -23,18 +20,16 @@ import com.nuecho.rivr.core.util.*;
  * Abstract servlet interacting with a web client acting as the controller of a
  * {@link SynchronousDialogueChannel}.
  * <p>
- * This abstract servlet must be extended in order to provide a specific
- * implementation. For each session,
+ * This abstract servlet must be extended in order to provide a specific implementation. For each
+ * session,
  * <ol>
- * <li>the servlet creates the {@link Session} and place it in the
- * {@link SessionContainer}</li>
+ * <li>the servlet creates the {@link Session} and place it in the {@link SessionContainer}</li>
  * <li>it creates a {@link Dialogue} with a {@link DialogueFactory}</li>
- * <li>it creates a {@link DialogueContext} with a
- * {@link DialogueContextFactory}</li>
- * <li>it creates a {@link SynchronousDialogueChannel} and starts the dialogue
- * upon initial HTTP request</li>
- * <li>it renders the various {@link Step steps} from the dialogue channel into
- * appropriate HTTP responses</li>
+ * <li>it creates a {@link DialogueContext} with a {@link DialogueContextFactory}</li>
+ * <li>it creates a {@link SynchronousDialogueChannel} and starts the dialogue upon initial HTTP
+ * request</li>
+ * <li>it renders the various {@link Step steps} from the dialogue channel into appropriate HTTP
+ * responses</li>
  * <li>it translates HTTP requests into {@link InputTurn InputTurns} using the
  * {@link InputTurnFactory}
  * <li>once the dialogue is done, the servlet perform necessary clean-up.</li>
@@ -44,30 +39,28 @@ import com.nuecho.rivr.core.util.*;
  * The following servlet initial arguments are supported:
  * <dl>
  * <dt>com.nuecho.rivr.core.dialogueTimeout</dt>
- * <dd>Maximum time for dialogue to produce an {@link OutputTurn}. Value
- * specified must be followed by unit (ms, s, m, h, d, y), e.g. <code>10s</code>
- * for 10 seconds. Default value: <code>10 s</code></dd>
+ * <dd>Maximum time for dialogue to produce an {@link OutputTurn}. Value specified must be followed
+ * by unit (ms, s, m, h, d, y), e.g. <code>10s</code> for 10 seconds. Default value:
+ * <code>10 s</code></dd>
  * <dt>com.nuecho.rivr.core.controllerTimeout</dt>
- * <dd>Maximum time for controller to produce an {@link InputTurn}. Value
- * specified must be followed by unit (ms, s, m, h, d, y), e.g. <code>10s</code>
- * for 10 seconds. Default value: <code>5 m</code></dd>
+ * <dd>Maximum time for controller to produce an {@link InputTurn}. Value specified must be followed
+ * by unit (ms, s, m, h, d, y), e.g. <code>10s</code> for 10 seconds. Default value:
+ * <code>5 m</code></dd>
  * <dt>com.nuecho.rivr.core.sessionTimeout</dt>
- * <dd>Maximum inactivity time for a session. Value specified must be followed
- * by unit (ms, s, m, h, d, y), e.g. <code>10s</code> for 10 seconds. Default
- * value: <code>30 m</code></dd>
+ * <dd>Maximum inactivity time for a session. Value specified must be followed by unit (ms, s, m, h,
+ * d, y), e.g. <code>10s</code> for 10 seconds. Default value: <code>30 m</code></dd>
  * </dl>
  * <dl>
  * <dt>com.nuecho.rivr.core.sessionScanPeriod</dt>
- * <dd>Time between each scan for dead sessions in the session container. Value
- * specified must be followed by unit (ms, s, m, h, d, y), e.g. <code>10s</code>
- * for 10 seconds. Default value: <code>2 m</code></dd>
+ * <dd>Time between each scan for dead sessions in the session container. Value specified must be
+ * followed by unit (ms, s, m, h, d, y), e.g. <code>10s</code> for 10 seconds. Default value:
+ * <code>2 m</code></dd>
  * </dl>
  * <dl>
  * <dt>com.nuecho.rivr.core.webappServerSessionTrackingEnabled</dt>
- * <dd>Whether a {@link javax.servlet.http.HttpSession} should be created for
- * each dialogue or not. This is useful for load-balancers using JSESSIONID
- * cookie to enforce server affinity (or stickyness). Value should be
- * <code>true</code> or <code>false</code>. Default value:
+ * <dd>Whether a {@link jakarta.servlet.http.HttpSession} should be created for each dialogue or
+ * not. This is useful for load-balancers using JSESSIONID cookie to enforce server affinity (or
+ * stickyness). Value should be <code>true</code> or <code>false</code>. Default value:
  * <code>true</code></dd>
  * </dl>
  *
@@ -79,498 +72,483 @@ import com.nuecho.rivr.core.util.*;
  * @author Nu Echo Inc.
  */
 public abstract class DialogueServlet<I extends InputTurn, O extends OutputTurn, F extends FirstTurn, L extends LastTurn, C extends DialogueContext<I, O>>
-        extends HttpServlet {
+    extends HttpServlet {
 
-    private static final String FALSE = "false";
-    private static final String TRUE = "true";
+  private static final String FALSE = "false";
+  private static final String TRUE = "true";
 
-    private static final String MDC_KEY_DIALOGUE_ID = "dialogueId";
+  private static final String MDC_KEY_DIALOGUE_ID = "dialogueId";
 
-    private static final String SESSION_LOGGER_NAME = "com.nuecho.rivr.session";
-    private static final String DIALOGUE_LOGGER_NAME = "com.nuecho.rivr.dialogue";
+  private static final String SESSION_LOGGER_NAME = "com.nuecho.rivr.session";
+  private static final String DIALOGUE_LOGGER_NAME = "com.nuecho.rivr.dialogue";
 
-    private static final String SERVLET_LOGGER_NAME = "com.nuecho.rivr.servlet";
-    private static final String RESPONSES_LOGGER_NAME = "com.nuecho.rivr.servlet.responses";
+  private static final String SERVLET_LOGGER_NAME = "com.nuecho.rivr.servlet";
+  private static final String RESPONSES_LOGGER_NAME = "com.nuecho.rivr.servlet.responses";
 
-    private static final long serialVersionUID = 1L;
-    private static final String SESSION_CONTAINER_NAME = "com.nuecho.rivr.sessionContainer";
+  private static final long serialVersionUID = 1L;
+  private static final String SESSION_CONTAINER_NAME = "com.nuecho.rivr.sessionContainer";
 
-    private static final String INITIAL_ARGUMENT_PREFIX = "com.nuecho.rivr.core.";
-    private static final String INITIAL_ARGUMENT_DIALOGUE_TIMEOUT = INITIAL_ARGUMENT_PREFIX + "dialogueTimeout";
-    private static final String INITIAL_ARGUMENT_SESSION_TIMEOUT = INITIAL_ARGUMENT_PREFIX + "sessionTimeout";
-    private static final String INITIAL_ARGUMENT_SESSION_SCAN_PERIOD = INITIAL_ARGUMENT_PREFIX + "sessionScanPeriod";
-    private static final String INITIAL_ARGUMENT_CONTROLLER_TIMEOUT = INITIAL_ARGUMENT_PREFIX + "controllerTimeout";
+  private static final String INITIAL_ARGUMENT_PREFIX = "com.nuecho.rivr.core.";
+  private static final String INITIAL_ARGUMENT_DIALOGUE_TIMEOUT =
+      INITIAL_ARGUMENT_PREFIX + "dialogueTimeout";
+  private static final String INITIAL_ARGUMENT_SESSION_TIMEOUT =
+      INITIAL_ARGUMENT_PREFIX + "sessionTimeout";
+  private static final String INITIAL_ARGUMENT_SESSION_SCAN_PERIOD =
+      INITIAL_ARGUMENT_PREFIX + "sessionScanPeriod";
+  private static final String INITIAL_ARGUMENT_CONTROLLER_TIMEOUT =
+      INITIAL_ARGUMENT_PREFIX + "controllerTimeout";
 
-    private static final String INITIAL_ARGUMENT_ENABLE_WEBAPP_SERVER_SESSION_TRACKING = INITIAL_ARGUMENT_PREFIX
-                                                                                         + "webappServerSessionTrackingEnabled";
+  private static final String INITIAL_ARGUMENT_ENABLE_WEBAPP_SERVER_SESSION_TRACKING =
+      INITIAL_ARGUMENT_PREFIX + "webappServerSessionTrackingEnabled";
 
-    private ErrorHandler<L> mErrorHandler;
-    private DialogueFactory<I, O, F, L, C> mDialogueFactory;
-    private DialogueContextFactory<C, I, O> mDialogueContextFactory;
-    private ILoggerFactory mLoggerFactory;
-    private SessionContainer<I, O, F, L, C> mSessionContainer;
-    private InputTurnFactory<I, F> mInputTurnFactory;
+  private ErrorHandler<L> mErrorHandler;
+  private DialogueFactory<I, O, F, L, C> mDialogueFactory;
+  private DialogueContextFactory<C, I, O> mDialogueContextFactory;
+  private ILoggerFactory mLoggerFactory;
+  private SessionContainer<I, O, F, L, C> mSessionContainer;
+  private InputTurnFactory<I, F> mInputTurnFactory;
 
-    private Duration mDialogueTimeout = Duration.seconds(10);
-    private Duration mControllerTimeout = Duration.minutes(5);
+  private Duration mDialogueTimeout = Duration.seconds(10);
+  private Duration mControllerTimeout = Duration.minutes(5);
 
-    private Duration mSessionTimeout = Duration.minutes(30);
-    private Duration mSessionScanPeriod = Duration.minutes(2);
+  private Duration mSessionTimeout = Duration.minutes(30);
+  private Duration mSessionScanPeriod = Duration.minutes(2);
 
-    private boolean mWebappServerSessionTrackingEnabled = true;
-    private Logger mLogger;
-    private Logger mResponseLogger;
+  private boolean mWebappServerSessionTrackingEnabled = true;
+  private Logger mLogger;
+  private Logger mResponseLogger;
 
-    private boolean mDestroyed;
+  private boolean mDestroyed;
 
-    /**
-     * Performs initialization.
-     *
-     * @throws DialogueServletInitializationException when servlet can't be
-     *             initialized properly.
-     */
-    protected abstract void initDialogueServlet() throws DialogueServletInitializationException;
+  /**
+   * Performs initialization.
+   *
+   * @throws DialogueServletInitializationException when servlet can't be initialized properly.
+   */
+  protected abstract void initDialogueServlet() throws DialogueServletInitializationException;
 
-    /**
-     * Performs shutdown.
-     */
-    protected abstract void destroyDialogueServlet();
+  /**
+   * Performs shutdown.
+   */
+  protected abstract void destroyDialogueServlet();
 
-    /**
-     * Provides the {@link StepRenderer} appropriate for the context.
-     *
-     * @param request the request
-     * @param session the session
-     * @return the <code>StepRenderer</code> object.
-     */
-    protected abstract StepRenderer<I, O, L, C> getStepRenderer(HttpServletRequest request,
-                                                                Session<I, O, F, L, C> session);
+  /**
+   * Provides the {@link StepRenderer} appropriate for the context.
+   *
+   * @param request the request
+   * @param session the session
+   * @return the <code>StepRenderer</code> object.
+   */
+  protected abstract StepRenderer<I, O, L, C> getStepRenderer(HttpServletRequest request,
+      Session<I, O, F, L, C> session);
 
-    /**
-     * Initializes the servlet. The first thing done in this method is to call
-     * {@link #initDialogueServlet()}. This method is called by the servlet
-     * container.
-     */
-    @Override
-    public final void init() throws ServletException {
+  /**
+   * Initializes the servlet. The first thing done in this method is to call
+   * {@link #initDialogueServlet()}. This method is called by the servlet container.
+   */
+  @Override
+  public final void init() throws ServletException {
 
-        Throwable initError = null;
+    Throwable initError = null;
 
-        try {
-            initDialogueServlet();
-        } catch (DialogueServletInitializationException exception) {
-            initError = exception;
-        }
-
-        if (mLoggerFactory == null) {
-            mLoggerFactory = LoggerFactory.getILoggerFactory();
-        }
-
-        mLogger = mLoggerFactory.getLogger(SERVLET_LOGGER_NAME);
-        mResponseLogger = mLoggerFactory.getLogger(RESPONSES_LOGGER_NAME);
-
-        if (initError != null) {
-            mLogger.error("Unable to initialize dialogue servlet.", initError);
-            destroy();
-            throw new ServletException("Unable to initialize dialogue servlet.", initError);
-        }
-
-        ensureFieldIsSet(mInputTurnFactory, "InputTurnFactory");
-        ensureFieldIsSet(mDialogueFactory, "DialogueFactory");
-        ensureFieldIsSet(mDialogueContextFactory, "DialogueContextFactory");
-        ensureFieldIsSet(mErrorHandler, "ErrorHandler");
-
-        Logger sessionContainerLogger = mLoggerFactory.getLogger(SESSION_LOGGER_NAME);
-
-        Duration sessionScanPeriod = getDuration(INITIAL_ARGUMENT_SESSION_SCAN_PERIOD);
-        if (sessionScanPeriod != null) {
-            setSessionScanPeriod(sessionScanPeriod);
-        }
-
-        Duration sessionTimeout = getDuration(INITIAL_ARGUMENT_SESSION_TIMEOUT);
-        if (sessionTimeout != null) {
-            setSessionTimeout(sessionTimeout);
-        }
-
-        mSessionContainer = new SessionContainer<I, O, F, L, C>(sessionContainerLogger,
-                                                                mSessionTimeout,
-                                                                mSessionScanPeriod,
-                                                                SESSION_CONTAINER_NAME);
-
-        Duration dialogueTimeout = getDuration(INITIAL_ARGUMENT_DIALOGUE_TIMEOUT);
-        if (dialogueTimeout != null) {
-            setDialogueTimeout(dialogueTimeout);
-        }
-
-        Duration controllerTimeout = getDuration(INITIAL_ARGUMENT_CONTROLLER_TIMEOUT);
-        if (controllerTimeout != null) {
-            setControllerTimeout(controllerTimeout);
-        }
-
-        Boolean enableWebappServerSessionTracking = getBoolean(INITIAL_ARGUMENT_ENABLE_WEBAPP_SERVER_SESSION_TRACKING);
-        if (enableWebappServerSessionTracking != null) {
-            setWebappServerSessionTrackingEnabled(enableWebappServerSessionTracking);
-        }
-
-        mLogger.info("Dialogue servlet initialized.");
-
+    try {
+      initDialogueServlet();
+    } catch (DialogueServletInitializationException exception) {
+      initError = exception;
     }
 
-    /**
-     * Destroys the servlet. This methods calls
-     * {@link #destroyDialogueServlet()}. This method is called by the servlet
-     * container.
-     */
-    @Override
-    public final synchronized void destroy() {
-        if (mDestroyed) return;
-        if (mSessionContainer != null) {
-            mSessionContainer.stop();
-        }
-        destroyDialogueServlet();
-
-        mLogger.info("Dialogue servlet destroyed.");
-        mDestroyed = true;
+    if (mLoggerFactory == null) {
+      mLoggerFactory = LoggerFactory.getILoggerFactory();
     }
 
-    private Duration getDuration(String key) throws ServletException {
-        ServletConfig servletConfig = getServletConfig();
-        String duration = servletConfig.getInitParameter(key);
-        if (duration == null) return null;
-        try {
-            return Duration.parse(duration);
-        } catch (IllegalArgumentException exception) {
-            throw new ServletException("Unable to parse duration for init-arg '" + key + "'", exception);
-        }
+    mLogger = mLoggerFactory.getLogger(SERVLET_LOGGER_NAME);
+    mResponseLogger = mLoggerFactory.getLogger(RESPONSES_LOGGER_NAME);
+
+    if (initError != null) {
+      mLogger.error("Unable to initialize dialogue servlet.", initError);
+      destroy();
+      throw new ServletException("Unable to initialize dialogue servlet.", initError);
     }
 
-    private Boolean getBoolean(String key) throws ServletException {
-        ServletConfig servletConfig = getServletConfig();
-        String booleanString = servletConfig.getInitParameter(key);
-        if (booleanString == null) return null;
-        if (booleanString.equalsIgnoreCase(TRUE)) return Boolean.TRUE;
-        if (booleanString.equalsIgnoreCase(FALSE)) return Boolean.FALSE;
-        throw new ServletException("Unable to parse boolean for init-arg '"
-                                   + key
-                                   + "'.  Should be '"
-                                   + TRUE
-                                   + "' of '"
-                                   + FALSE
-                                   + "' but not '"
-                                   + booleanString
-                                   + "'.");
+    ensureFieldIsSet(mInputTurnFactory, "InputTurnFactory");
+    ensureFieldIsSet(mDialogueFactory, "DialogueFactory");
+    ensureFieldIsSet(mDialogueContextFactory, "DialogueContextFactory");
+    ensureFieldIsSet(mErrorHandler, "ErrorHandler");
+
+    Logger sessionContainerLogger = mLoggerFactory.getLogger(SESSION_LOGGER_NAME);
+
+    Duration sessionScanPeriod = getDuration(INITIAL_ARGUMENT_SESSION_SCAN_PERIOD);
+    if (sessionScanPeriod != null) {
+      setSessionScanPeriod(sessionScanPeriod);
     }
 
-    private void ensureFieldIsSet(Object fieldValue, String fieldName) {
-        if (fieldValue == null) throw new IllegalStateException(fieldName + " is not set.");
+    Duration sessionTimeout = getDuration(INITIAL_ARGUMENT_SESSION_TIMEOUT);
+    if (sessionTimeout != null) {
+      setSessionTimeout(sessionTimeout);
     }
 
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        process(request, response);
+    mSessionContainer = new SessionContainer<I, O, F, L, C>(sessionContainerLogger, mSessionTimeout,
+        mSessionScanPeriod, SESSION_CONTAINER_NAME);
+
+    Duration dialogueTimeout = getDuration(INITIAL_ARGUMENT_DIALOGUE_TIMEOUT);
+    if (dialogueTimeout != null) {
+      setDialogueTimeout(dialogueTimeout);
     }
 
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        process(request, response);
+    Duration controllerTimeout = getDuration(INITIAL_ARGUMENT_CONTROLLER_TIMEOUT);
+    if (controllerTimeout != null) {
+      setControllerTimeout(controllerTimeout);
     }
 
-    public final ILoggerFactory getLoggerFactory() {
-        return mLoggerFactory;
+    Boolean enableWebappServerSessionTracking =
+        getBoolean(INITIAL_ARGUMENT_ENABLE_WEBAPP_SERVER_SESSION_TRACKING);
+    if (enableWebappServerSessionTracking != null) {
+      setWebappServerSessionTrackingEnabled(enableWebappServerSessionTracking);
     }
 
-    protected void renderOutputTurn(O outputTurn,
-                                    HttpServletRequest request,
-                                    final HttpServletResponse response,
-                                    Session<I, O, F, L, C> session) throws IOException, StepRendererException {
-        ServletResponseContent responseContent = getStepRenderer(request, session).createDocumentForOutputTurn(outputTurn,
-                                                                                                               request,
-                                                                                                               response,
-                                                                                                               session.getDialogueContext());
-        commitToResponse(response, responseContent);
+    mLogger.info("Dialogue servlet initialized.");
+
+  }
+
+  /**
+   * Destroys the servlet. This methods calls {@link #destroyDialogueServlet()}. This method is
+   * called by the servlet container.
+   */
+  @Override
+  public final synchronized void destroy() {
+    if (mDestroyed)
+      return;
+    if (mSessionContainer != null) {
+      mSessionContainer.stop();
+    }
+    destroyDialogueServlet();
+
+    mLogger.info("Dialogue servlet destroyed.");
+    mDestroyed = true;
+  }
+
+  private Duration getDuration(String key) throws ServletException {
+    ServletConfig servletConfig = getServletConfig();
+    String duration = servletConfig.getInitParameter(key);
+    if (duration == null)
+      return null;
+    try {
+      return Duration.parse(duration);
+    } catch (IllegalArgumentException exception) {
+      throw new ServletException("Unable to parse duration for init-arg '" + key + "'", exception);
+    }
+  }
+
+  private Boolean getBoolean(String key) throws ServletException {
+    ServletConfig servletConfig = getServletConfig();
+    String booleanString = servletConfig.getInitParameter(key);
+    if (booleanString == null)
+      return null;
+    if (booleanString.equalsIgnoreCase(TRUE))
+      return Boolean.TRUE;
+    if (booleanString.equalsIgnoreCase(FALSE))
+      return Boolean.FALSE;
+    throw new ServletException("Unable to parse boolean for init-arg '" + key + "'.  Should be '"
+        + TRUE + "' of '" + FALSE + "' but not '" + booleanString + "'.");
+  }
+
+  private void ensureFieldIsSet(Object fieldValue, String fieldName) {
+    if (fieldValue == null)
+      throw new IllegalStateException(fieldName + " is not set.");
+  }
+
+  @Override
+  protected void doGet(HttpServletRequest request, HttpServletResponse response)
+      throws ServletException, IOException {
+    process(request, response);
+  }
+
+  @Override
+  protected void doPost(HttpServletRequest request, HttpServletResponse response)
+      throws ServletException, IOException {
+    process(request, response);
+  }
+
+  public final ILoggerFactory getLoggerFactory() {
+    return mLoggerFactory;
+  }
+
+  protected void renderOutputTurn(O outputTurn, HttpServletRequest request,
+      final HttpServletResponse response, Session<I, O, F, L, C> session)
+      throws IOException, StepRendererException {
+    ServletResponseContent responseContent = getStepRenderer(request, session)
+        .createDocumentForOutputTurn(outputTurn, request, response, session.getDialogueContext());
+    commitToResponse(response, responseContent);
+  }
+
+  protected void renderLastTurn(L result, HttpServletRequest request, HttpServletResponse response,
+      Session<I, O, F, L, C> session) throws IOException, StepRendererException {
+    ServletResponseContent responseContent = getStepRenderer(request, session)
+        .createDocumentForLastTurn(result, request, response, session.getDialogueContext());
+    commitToResponse(response, responseContent);
+    session.stop();
+  }
+
+  protected void renderError(Throwable error, HttpServletRequest request,
+      HttpServletResponse response, Session<I, O, F, L, C> session)
+      throws IOException, StepRendererException {
+
+    L fatalErrorTurn = mErrorHandler.handleError(error);
+
+    ServletResponseContent responseContent = getStepRenderer(request, session)
+        .createDocumentForLastTurn(fatalErrorTurn, request, response, session.getDialogueContext());
+    commitToResponse(response, responseContent);
+    session.stop();
+  }
+
+  public final void setInputTurnFactory(InputTurnFactory<I, F> inputTurnFactory) {
+    Assert.notNull(inputTurnFactory, "inputTurnFactory");
+    mInputTurnFactory = inputTurnFactory;
+  }
+
+  public final void setDialogueFactory(DialogueFactory<I, O, F, L, C> dialogueFactory) {
+    Assert.notNull(dialogueFactory, "dialogueFactory");
+    mDialogueFactory = dialogueFactory;
+  }
+
+  public final void setDialogueContextFactory(
+      DialogueContextFactory<C, I, O> dialogueContextFactory) {
+    Assert.notNull(dialogueContextFactory, "dialogueContextFactory");
+    mDialogueContextFactory = dialogueContextFactory;
+  }
+
+  public final void setLoggerFactory(ILoggerFactory loggerFactory) {
+    Assert.notNull(loggerFactory, "loggerFactory");
+    mLoggerFactory = loggerFactory;
+  }
+
+  /**
+   * Sets maximum duration the servlet thread can wait for the dialogue response.
+   *
+   * @param dialogueTimeout the timeout. Cannot be <code>null</code>. A value of
+   *        <code>Duration.ZERO</code> (or equivalent) means to wait forever.
+   */
+  public final void setDialogueTimeout(Duration dialogueTimeout) {
+    Assert.notNull(dialogueTimeout, "dialogueTimeout");
+    mDialogueTimeout = dialogueTimeout;
+  }
+
+  /**
+   * Sets maximum duration the dialogue thread can wait for the controller response.
+   *
+   * @param controllerTimeout the timeout. Cannot be <code>null</code>. A value of
+   *        <code>Duration.ZERO</code> (or equivalent) means to wait forever.
+   * @since 1.0.1
+   */
+  public final void setControllerTimeout(Duration controllerTimeout) {
+    Assert.notNull(controllerTimeout, "controllerTimeout");
+    mControllerTimeout = controllerTimeout;
+  }
+
+  public final void setSessionTimeout(Duration sessionTimeout) {
+    Assert.notNull(sessionTimeout, "sessionTimeout");
+    mSessionTimeout = sessionTimeout;
+  }
+
+  public final void setSessionScanPeriod(Duration sessionScanPeriod) {
+    Assert.notNull(sessionScanPeriod, "sessionScanPeriod");
+    mSessionScanPeriod = sessionScanPeriod;
+  }
+
+  public final void setErrorHandler(ErrorHandler<L> errorHandler) {
+    Assert.notNull(errorHandler, "errorHandler");
+    mErrorHandler = errorHandler;
+  }
+
+  /**
+   * Indicates if the servlet should create an HttpSession object for each dialogue. Note: Nothing
+   * is stored in the <code>HttpSession</code>. However, the creation of a session would force the
+   * web container to track the session using a cookie (JSESSIONID) or to do URL-rewriting. This is
+   * only relevant if there is more than one web container fronted by a load balancer.
+   *
+   * @param enableWebappServerSessionTracking true if HttpSession are to be used for session
+   *        tracking.
+   * @since 1.0.1
+   */
+  public final void setWebappServerSessionTrackingEnabled(
+      boolean enableWebappServerSessionTracking) {
+    mWebappServerSessionTrackingEnabled = enableWebappServerSessionTracking;
+  }
+
+  private void process(HttpServletRequest request, HttpServletResponse response)
+      throws ServletException {
+    Session<I, O, F, L, C> session;
+    try {
+      session = getSession(request);
+      MDC.put(MDC_KEY_DIALOGUE_ID, session.getId());
+      process(request, response, session);
+    } catch (SessionNotFoundException exception) {
+      throw new ServletException("Cannot find session.", exception);
+    } finally {
+      MDC.remove(MDC_KEY_DIALOGUE_ID);
     }
 
-    protected void renderLastTurn(L result,
-                                  HttpServletRequest request,
-                                  HttpServletResponse response,
-                                  Session<I, O, F, L, C> session) throws IOException, StepRendererException {
-        ServletResponseContent responseContent = getStepRenderer(request, session).createDocumentForLastTurn(result,
-                                                                                                             request,
-                                                                                                             response,
-                                                                                                             session.getDialogueContext());
-        commitToResponse(response, responseContent);
-        session.stop();
-    }
+  }
 
-    protected void renderError(Throwable error,
-                               HttpServletRequest request,
-                               HttpServletResponse response,
-                               Session<I, O, F, L, C> session) throws IOException, StepRendererException {
+  private void process(HttpServletRequest request, HttpServletResponse response,
+      Session<I, O, F, L, C> session) throws ServletException {
+    try {
 
-        L fatalErrorTurn = mErrorHandler.handleError(error);
+      Step<O, L> step;
+      C dialogueContext = session.getDialogueContext();
 
-        ServletResponseContent responseContent = getStepRenderer(request, session).createDocumentForLastTurn(fatalErrorTurn,
-                                                                                                             request,
-                                                                                                             response,
-                                                                                                             session.getDialogueContext());
-        commitToResponse(response, responseContent);
-        session.stop();
-    }
-
-    public final void setInputTurnFactory(InputTurnFactory<I, F> inputTurnFactory) {
-        Assert.notNull(inputTurnFactory, "inputTurnFactory");
-        mInputTurnFactory = inputTurnFactory;
-    }
-
-    public final void setDialogueFactory(DialogueFactory<I, O, F, L, C> dialogueFactory) {
-        Assert.notNull(dialogueFactory, "dialogueFactory");
-        mDialogueFactory = dialogueFactory;
-    }
-
-    public final void setDialogueContextFactory(DialogueContextFactory<C, I, O> dialogueContextFactory) {
-        Assert.notNull(dialogueContextFactory, "dialogueContextFactory");
-        mDialogueContextFactory = dialogueContextFactory;
-    }
-
-    public final void setLoggerFactory(ILoggerFactory loggerFactory) {
-        Assert.notNull(loggerFactory, "loggerFactory");
-        mLoggerFactory = loggerFactory;
-    }
-
-    /**
-     * Sets maximum duration the servlet thread can wait for the dialogue
-     * response.
-     *
-     * @param dialogueTimeout the timeout. Cannot be <code>null</code>. A value
-     *            of <code>Duration.ZERO</code> (or equivalent) means to wait
-     *            forever.
-     */
-    public final void setDialogueTimeout(Duration dialogueTimeout) {
-        Assert.notNull(dialogueTimeout, "dialogueTimeout");
-        mDialogueTimeout = dialogueTimeout;
-    }
-
-    /**
-     * Sets maximum duration the dialogue thread can wait for the controller
-     * response.
-     *
-     * @param controllerTimeout the timeout. Cannot be <code>null</code>. A
-     *            value of <code>Duration.ZERO</code> (or equivalent) means to
-     *            wait forever.
-     * @since 1.0.1
-     */
-    public final void setControllerTimeout(Duration controllerTimeout) {
-        Assert.notNull(controllerTimeout, "controllerTimeout");
-        mControllerTimeout = controllerTimeout;
-    }
-
-    public final void setSessionTimeout(Duration sessionTimeout) {
-        Assert.notNull(sessionTimeout, "sessionTimeout");
-        mSessionTimeout = sessionTimeout;
-    }
-
-    public final void setSessionScanPeriod(Duration sessionScanPeriod) {
-        Assert.notNull(sessionScanPeriod, "sessionScanPeriod");
-        mSessionScanPeriod = sessionScanPeriod;
-    }
-
-    public final void setErrorHandler(ErrorHandler<L> errorHandler) {
-        Assert.notNull(errorHandler, "errorHandler");
-        mErrorHandler = errorHandler;
-    }
-
-    /**
-     * Indicates if the servlet should create an HttpSession object for each
-     * dialogue. Note: Nothing is stored in the <code>HttpSession</code>.
-     * However, the creation of a session would force the web container to track
-     * the session using a cookie (JSESSIONID) or to do URL-rewriting. This is
-     * only relevant if there is more than one web container fronted by a load
-     * balancer.
-     *
-     * @param enableWebappServerSessionTracking true if HttpSession are to be
-     *            used for session tracking.
-     * @since 1.0.1
-     */
-    public final void setWebappServerSessionTrackingEnabled(boolean enableWebappServerSessionTracking) {
-        mWebappServerSessionTrackingEnabled = enableWebappServerSessionTracking;
-    }
-
-    private void process(HttpServletRequest request, HttpServletResponse response) throws ServletException {
-        Session<I, O, F, L, C> session;
-        try {
-            session = getSession(request);
-            MDC.put(MDC_KEY_DIALOGUE_ID, session.getId());
-            process(request, response, session);
-        } catch (SessionNotFoundException exception) {
-            throw new ServletException("Cannot find session.", exception);
-        } finally {
-            MDC.remove(MDC_KEY_DIALOGUE_ID);
-        }
-
-    }
-
-    private void process(HttpServletRequest request, HttpServletResponse response, Session<I, O, F, L, C> session)
-            throws ServletException {
-        try {
-
-            Step<O, L> step;
-            C dialogueContext = session.getDialogueContext();
-
-            try {
-                if (dialogueContext == null) {
-                    step = startDialogue(request, response, session);
-                } else {
-                    step = continueDialogue(request, response, session);
-                }
-            } catch (Timeout exception) {
-                renderError(exception, request, response, session);
-                return;
-            } catch (InterruptedException exception) {
-                Thread.currentThread().interrupt();
-                renderError(exception, request, response, session);
-                return;
-            }
-
-            if (step instanceof OutputTurnStep) {
-                OutputTurnStep<O, L> outputTurnStep = (OutputTurnStep<O, L>) step;
-                renderOutputTurn(outputTurnStep.getOutputTurn(), request, response, session);
-            } else if (step instanceof LastTurnStep) {
-                LastTurnStep<O, L> lastTurnStep = (LastTurnStep<O, L>) step;
-                renderLastTurn(lastTurnStep.getLastTurn(), request, response, session);
-            } else if (step instanceof ErrorStep) {
-                ErrorStep<O, L> errorStep = (ErrorStep<O, L>) step;
-                Throwable throwable = errorStep.getThrowable();
-                renderError(throwable, request, response, session);
-            }
-        } catch (Exception exception) {
-            throw new ServletException("Error while rendering step.", exception);
-        }
-    }
-
-    private Step<O, L> continueDialogue(HttpServletRequest request,
-                                        HttpServletResponse response,
-                                        Session<I, O, F, L, C> session) throws ServletException, Timeout,
-            InterruptedException {
-        Assert.notNull(session, "session");
-        I inputTurn = createInputTurn(request, response);
-        SynchronousDialogueChannel<I, O, F, L, C> dialogueChannel = session.getDialogueChannel();
-        Assert.notNull(dialogueChannel, "dialogueChannel");
-        return dialogueChannel.doTurn(inputTurn, mDialogueTimeout);
-    }
-
-    private Step<O, L> startDialogue(HttpServletRequest request,
-                                     HttpServletResponse response,
-                                     Session<I, O, F, L, C> session) throws ServletException, Timeout,
-            InterruptedException {
-        SynchronousDialogueChannel<I, O, F, L, C> dialogueChannel;
-        dialogueChannel = new SynchronousDialogueChannel<I, O, F, L, C>();
-        session.setDialogueChannel(dialogueChannel);
-
-        Logger logger = mLoggerFactory.getLogger(DIALOGUE_LOGGER_NAME);
-        dialogueChannel.setLogger(logger);
-
-        dialogueChannel.setDefaultReceiveFromControllerTimeout(mControllerTimeout);
-        dialogueChannel.setDefaultReceiveFromDialogueTimeout(mDialogueTimeout);
-
-        C dialogueContext = createContext(request, session, dialogueChannel, logger);
-
-        DialogueInitializationInfo<I, O, C> initializationInfo;
-        initializationInfo = createInitializationInfo(request, response, dialogueContext);
-        Dialogue<I, O, F, L, C> dialogue;
-        try {
-            dialogue = mDialogueFactory.create(initializationInfo);
-        } catch (DialogueFactoryException exception) {
-            throw new ServletException("Unable to create dialogue.", exception);
-        }
-        F firstTurn = createFirstTurn(request, response);
-        return dialogueChannel.start(dialogue, firstTurn, mDialogueTimeout, dialogueContext);
-    }
-
-    private C createContext(HttpServletRequest request,
-                            Session<I, O, F, L, C> session,
-                            SynchronousDialogueChannel<I, O, F, L, C> dialogueChannel,
-                            Logger logger) {
-        C dialogueContext = mDialogueContextFactory.createDialogueContext(request,
-                                                                          session.getId(),
-                                                                          dialogueChannel,
-                                                                          logger);
-        session.setDialogueContext(dialogueContext);
-        return dialogueContext;
-    }
-
-    private WebDialogueInitializationInfo<I, O, C> createInitializationInfo(HttpServletRequest request,
-                                                                            HttpServletResponse response,
-                                                                            C dialogueContext) {
-        return new WebDialogueInitializationInfo<I, O, C>(dialogueContext, request, response, getServletContext(), this);
-    }
-
-    protected Session<I, O, F, L, C> getSession(HttpServletRequest request) throws SessionNotFoundException {
-        String pathInfo = request.getPathInfo();
-
-        if (pathInfo != null && !pathInfo.equals("/")) {
-            if (pathInfo.startsWith("/")) {
-                pathInfo = pathInfo.substring(1);
-            }
-
-            int firstSlash = pathInfo.indexOf('/');
-            if (firstSlash != -1) {
-                pathInfo = pathInfo.substring(0, firstSlash);
-            }
-
-            return getExistingSession(pathInfo);
+      try {
+        if (dialogueContext == null) {
+          step = startDialogue(request, response, session);
         } else {
-            String sessionId = UUID.randomUUID().toString();
-
-            Session<I, O, F, L, C> session = new Session<I, O, F, L, C>(mSessionContainer, sessionId);
-            mSessionContainer.addSession(session);
-            if (mWebappServerSessionTrackingEnabled) {
-                session.setAssociatedHttpSession(request.getSession());
-            }
-
-            return session;
+          step = continueDialogue(request, response, session);
         }
+      } catch (Timeout exception) {
+        renderError(exception, request, response, session);
+        return;
+      } catch (InterruptedException exception) {
+        Thread.currentThread().interrupt();
+        renderError(exception, request, response, session);
+        return;
+      }
+
+      if (step instanceof OutputTurnStep) {
+        OutputTurnStep<O, L> outputTurnStep = (OutputTurnStep<O, L>) step;
+        renderOutputTurn(outputTurnStep.getOutputTurn(), request, response, session);
+      } else if (step instanceof LastTurnStep) {
+        LastTurnStep<O, L> lastTurnStep = (LastTurnStep<O, L>) step;
+        renderLastTurn(lastTurnStep.getLastTurn(), request, response, session);
+      } else if (step instanceof ErrorStep) {
+        ErrorStep<O, L> errorStep = (ErrorStep<O, L>) step;
+        Throwable throwable = errorStep.getThrowable();
+        renderError(throwable, request, response, session);
+      }
+    } catch (Exception exception) {
+      throw new ServletException("Error while rendering step.", exception);
+    }
+  }
+
+  private Step<O, L> continueDialogue(HttpServletRequest request, HttpServletResponse response,
+      Session<I, O, F, L, C> session) throws ServletException, Timeout, InterruptedException {
+    Assert.notNull(session, "session");
+    I inputTurn = createInputTurn(request, response);
+    SynchronousDialogueChannel<I, O, F, L, C> dialogueChannel = session.getDialogueChannel();
+    Assert.notNull(dialogueChannel, "dialogueChannel");
+    return dialogueChannel.doTurn(inputTurn, mDialogueTimeout);
+  }
+
+  private Step<O, L> startDialogue(HttpServletRequest request, HttpServletResponse response,
+      Session<I, O, F, L, C> session) throws ServletException, Timeout, InterruptedException {
+    SynchronousDialogueChannel<I, O, F, L, C> dialogueChannel;
+    dialogueChannel = new SynchronousDialogueChannel<I, O, F, L, C>();
+    session.setDialogueChannel(dialogueChannel);
+
+    Logger logger = mLoggerFactory.getLogger(DIALOGUE_LOGGER_NAME);
+    dialogueChannel.setLogger(logger);
+
+    dialogueChannel.setDefaultReceiveFromControllerTimeout(mControllerTimeout);
+    dialogueChannel.setDefaultReceiveFromDialogueTimeout(mDialogueTimeout);
+
+    C dialogueContext = createContext(request, session, dialogueChannel, logger);
+
+    DialogueInitializationInfo<I, O, C> initializationInfo;
+    initializationInfo = createInitializationInfo(request, response, dialogueContext);
+    Dialogue<I, O, F, L, C> dialogue;
+    try {
+      dialogue = mDialogueFactory.create(initializationInfo);
+    } catch (DialogueFactoryException exception) {
+      throw new ServletException("Unable to create dialogue.", exception);
+    }
+    F firstTurn = createFirstTurn(request, response);
+    return dialogueChannel.start(dialogue, firstTurn, mDialogueTimeout, dialogueContext);
+  }
+
+  private C createContext(HttpServletRequest request, Session<I, O, F, L, C> session,
+      SynchronousDialogueChannel<I, O, F, L, C> dialogueChannel, Logger logger) {
+    C dialogueContext = mDialogueContextFactory.createDialogueContext(request, session.getId(),
+        dialogueChannel, logger);
+    session.setDialogueContext(dialogueContext);
+    return dialogueContext;
+  }
+
+  private WebDialogueInitializationInfo<I, O, C> createInitializationInfo(
+      HttpServletRequest request, HttpServletResponse response, C dialogueContext) {
+    return new WebDialogueInitializationInfo<I, O, C>(dialogueContext, request, response,
+        getServletContext(), this);
+  }
+
+  protected Session<I, O, F, L, C> getSession(HttpServletRequest request)
+      throws SessionNotFoundException {
+    String pathInfo = request.getPathInfo();
+
+    if (pathInfo != null && !pathInfo.equals("/")) {
+      if (pathInfo.startsWith("/")) {
+        pathInfo = pathInfo.substring(1);
+      }
+
+      int firstSlash = pathInfo.indexOf('/');
+      if (firstSlash != -1) {
+        pathInfo = pathInfo.substring(0, firstSlash);
+      }
+
+      return getExistingSession(pathInfo);
+    } else {
+      String sessionId = UUID.randomUUID().toString();
+
+      Session<I, O, F, L, C> session = new Session<I, O, F, L, C>(mSessionContainer, sessionId);
+      mSessionContainer.addSession(session);
+      if (mWebappServerSessionTrackingEnabled) {
+        session.setAssociatedHttpSession(request.getSession());
+      }
+
+      return session;
+    }
+  }
+
+  protected Session<I, O, F, L, C> getExistingSession(String sessionId)
+      throws SessionNotFoundException {
+    Session<I, O, F, L, C> session = mSessionContainer.getSession(sessionId);
+
+    if (session == null)
+      throw new SessionNotFoundException("Unable to find session [" + sessionId + "]");
+
+    return session;
+  }
+
+  private I createInputTurn(HttpServletRequest request, HttpServletResponse response)
+      throws ServletException {
+    try {
+      return mInputTurnFactory.createInputTurn(request, response);
+    } catch (InputTurnFactoryException exception) {
+      throw new ServletException(exception);
+    }
+  }
+
+  private F createFirstTurn(HttpServletRequest request, HttpServletResponse response)
+      throws ServletException {
+    try {
+      return mInputTurnFactory.createFirstTurn(request, response);
+    } catch (InputTurnFactoryException exception) {
+      throw new ServletException(exception);
+    }
+  }
+
+  private void commitToResponse(final HttpServletResponse response,
+      ServletResponseContent responseContent) throws IOException {
+    ServletOutputStream outputStream = response.getOutputStream();
+
+    if (mResponseLogger.isDebugEnabled()) {
+      mResponseLogger.debug("Content-length: {}", responseContent.getContentLength());
+      mResponseLogger.debug("Content-type: {}", responseContent.getContentType());
+      mResponseLogger.debug("Content: {}", responseContent.getContentAsString());
     }
 
-    protected Session<I, O, F, L, C> getExistingSession(String sessionId) throws SessionNotFoundException {
-        Session<I, O, F, L, C> session = mSessionContainer.getSession(sessionId);
-
-        if (session == null) throw new SessionNotFoundException("Unable to find session [" + sessionId + "]");
-
-        return session;
+    response.setContentType(responseContent.getContentType());
+    Integer contentLength = responseContent.getContentLength();
+    if (contentLength != null) {
+      response.setContentLength(contentLength);
     }
 
-    private I createInputTurn(HttpServletRequest request, HttpServletResponse response) throws ServletException {
-        try {
-            return mInputTurnFactory.createInputTurn(request, response);
-        } catch (InputTurnFactoryException exception) {
-            throw new ServletException(exception);
-        }
-    }
-
-    private F createFirstTurn(HttpServletRequest request, HttpServletResponse response) throws ServletException {
-        try {
-            return mInputTurnFactory.createFirstTurn(request, response);
-        } catch (InputTurnFactoryException exception) {
-            throw new ServletException(exception);
-        }
-    }
-
-    private void commitToResponse(final HttpServletResponse response, ServletResponseContent responseContent)
-            throws IOException {
-        ServletOutputStream outputStream = response.getOutputStream();
-
-        if (mResponseLogger.isDebugEnabled()) {
-            mResponseLogger.debug("Content-length: {}", responseContent.getContentLength());
-            mResponseLogger.debug("Content-type: {}", responseContent.getContentType());
-            mResponseLogger.debug("Content: {}", responseContent.getContentAsString());
-        }
-
-        response.setContentType(responseContent.getContentType());
-        Integer contentLength = responseContent.getContentLength();
-        if (contentLength != null) {
-            response.setContentLength(contentLength);
-        }
-
-        responseContent.writeTo(outputStream);
-    }
+    responseContent.writeTo(outputStream);
+  }
 }

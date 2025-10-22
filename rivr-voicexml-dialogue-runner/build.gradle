@@ -1,7 +1,7 @@
 apply plugin: 'war'
 
 // Required for Maven central
-task sourcesJar(type: Jar) {
+/*task sourcesJar(type: Jar) {
     from sourceSets.main.java
     classifier 'sources'
 }
@@ -23,5 +23,5 @@ publishing {
             from project.components.web
         }
     }
-}
+}*/
 

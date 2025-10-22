@@ -6,10 +6,10 @@ The build tool used in Rivr is [Gradle](https://www.gradle.org/). This distribut
 
 Gradle will download the required build dependencies from Maven Central:
 
-* javax.servlet:servlet-api:2.5
-* org.slf4j:slf4j-api:1.7.5
-* commons-fileupload:commons-fileupload:1.2.1
-* javax.json:javax.json-api:1.0
+* jakarta.servlet:servlet-api:latest
+* org.slf4j:slf4j-api:latest
+* commons-fileupload:commons-fileupload:latest
+* jakarta.json-api:latest
 
 After a successful build, The resulting jar file can be found here:
 
@@ -89,7 +89,7 @@ dependencies {
 Obtain and add to your compilation classpath the following jar files:
 
 * commons-fileupload-1.2.1.jar
-* javax.json-api-1.0.jar
+* jakarta.json-api-1.0.jar
 * servlet-api-2.5.jar
 * slf4j-api-1.7.5.jar
 
@@ -98,10 +98,10 @@ In your runtime classpath (i.e. your WEB-INF/lib), you should have:
 * rivr-voicexml-1.0.11.jar
 * rivr-core-1.0.11.jar
 * commons-fileupload-1.2.1.jar
-* javax.json-api-1.0.jar
+* jakarta.json-api-1.0.jar
 * slf4j-api-1.7.5.jar
 * (an slf4j implementation adapter)
-* javax.json-ri.jar (can get it from GlassFish project) 
+* jakarta.json-ri.jar (can get it from GlassFish project) 
 
 ## Using the dialogue runner
 

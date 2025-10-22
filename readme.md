@@ -48,7 +48,7 @@ You should have:
     2. the run-time dependencies
         1. slf4j-api.jar, an SLF4J adapter jar for a given logging framework and the required logging framework jar files.
         2. commons-fileupload.jar
-        3. javax.json-api.jar and an implementation (see GlassFish project for the reference implementation)
+        3. jakarta.json-api.jar and an implementation (see GlassFish project for the reference implementation)
     3. your Rivr application (minimally a Dialogue class)
     4. the appropriate configuration in web.xml
 

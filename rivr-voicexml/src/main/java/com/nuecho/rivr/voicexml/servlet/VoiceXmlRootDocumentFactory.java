@@ -4,10 +4,8 @@
 
 package com.nuecho.rivr.voicexml.servlet;
 
-import javax.servlet.http.*;
-
+import jakarta.servlet.http.*;
 import org.w3c.dom.*;
-
 import com.nuecho.rivr.voicexml.rendering.voicexml.*;
 
 /**
@@ -15,6 +13,6 @@ import com.nuecho.rivr.voicexml.rendering.voicexml.*;
  */
 public interface VoiceXmlRootDocumentFactory {
 
-    Document getDocument(HttpServletRequest request) throws VoiceXmlDocumentRenderingException;
+  Document getDocument(HttpServletRequest request) throws VoiceXmlDocumentRenderingException;
 
 }

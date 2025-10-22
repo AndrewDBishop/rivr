@@ -409,7 +409,7 @@
 
 #### Changed
 
-* build.gradle: Updated run-time dependency: org.glassfish:javax.json:1.0.4.
+* build.gradle: Updated run-time dependency: org.glassfish:jakarta.json:1.0.4.
 
 #### Added
 

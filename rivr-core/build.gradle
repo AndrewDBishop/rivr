@@ -1,6 +1,6 @@
 dependencies {
-    api 'javax.servlet:servlet-api:2.5'
-    api 'org.slf4j:slf4j-api:1.7.5'
+    api 'jakarta.servlet:jakarta.servlet-api:6.1.0'
+    api 'org.slf4j:slf4j-api:2.0.+'
 }
 
 jar {

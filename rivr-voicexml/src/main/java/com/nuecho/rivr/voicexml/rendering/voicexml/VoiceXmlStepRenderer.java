@@ -6,11 +6,8 @@ package com.nuecho.rivr.voicexml.rendering.voicexml;
 
 import java.io.*;
 import java.util.*;
-
-import javax.servlet.http.*;
-
+import jakarta.servlet.http.*;
 import org.w3c.dom.*;
-
 import com.nuecho.rivr.core.servlet.*;
 import com.nuecho.rivr.core.util.*;
 import com.nuecho.rivr.voicexml.dialogue.*;
@@ -20,71 +17,66 @@ import com.nuecho.rivr.voicexml.turn.last.*;
 import com.nuecho.rivr.voicexml.turn.output.*;
 
 /**
- * VoiceXML specialization of {@link StepRenderer}. {@link VoiceXmlOutputTurn
- * VoiceXmlOutputTurns} and {@link VoiceXmlLastTurn VoiceXmlLastTurns} are
- * converted to VoiceXML documents.
- * 
+ * VoiceXML specialization of {@link StepRenderer}. {@link VoiceXmlOutputTurn VoiceXmlOutputTurns}
+ * and {@link VoiceXmlLastTurn VoiceXmlLastTurns} are converted to VoiceXML documents.
+ *
  * @author Nu Echo Inc.
  */
 public class VoiceXmlStepRenderer implements
-        StepRenderer<VoiceXmlInputTurn, VoiceXmlOutputTurn, VoiceXmlLastTurn, VoiceXmlDialogueContext> {
+    StepRenderer<VoiceXmlInputTurn, VoiceXmlOutputTurn, VoiceXmlLastTurn, VoiceXmlDialogueContext> {
 
-    private static final String VOICE_XML_MIME_TYPE = "application/voicexml+xml";
+  private static final String VOICE_XML_MIME_TYPE = "application/voicexml+xml";
 
-    private final List<VoiceXmlDocumentAdapter> mVoiceXmlDocumentAdapters;
+  private final List<VoiceXmlDocumentAdapter> mVoiceXmlDocumentAdapters;
 
-    public VoiceXmlStepRenderer(List<? extends VoiceXmlDocumentAdapter> voiceXmlDocumentAdapters) {
-        if (voiceXmlDocumentAdapters != null) {
-            mVoiceXmlDocumentAdapters = new ArrayList<VoiceXmlDocumentAdapter>(voiceXmlDocumentAdapters);
-        } else {
-            mVoiceXmlDocumentAdapters = null;
-        }
+  public VoiceXmlStepRenderer(List<? extends VoiceXmlDocumentAdapter> voiceXmlDocumentAdapters) {
+    if (voiceXmlDocumentAdapters != null) {
+      mVoiceXmlDocumentAdapters = new ArrayList<VoiceXmlDocumentAdapter>(voiceXmlDocumentAdapters);
+    } else {
+      mVoiceXmlDocumentAdapters = null;
+    }
+  }
+
+  @Override
+  public ServletResponseContent createDocumentForOutputTurn(VoiceXmlOutputTurn outputTurn,
+      HttpServletRequest request, HttpServletResponse response,
+      VoiceXmlDialogueContext voiceXmlDialogueContext) throws StepRendererException {
+    return renderTurn(outputTurn, voiceXmlDialogueContext);
+  }
+
+  @Override
+  public ServletResponseContent createDocumentForLastTurn(VoiceXmlLastTurn lastTurn,
+      HttpServletRequest request, HttpServletResponse response,
+      VoiceXmlDialogueContext voiceXmlDialogueContext) throws StepRendererException {
+    return renderTurn(lastTurn, voiceXmlDialogueContext);
+  }
+
+  private ServletResponseContent renderTurn(VoiceXmlDocumentTurn turn,
+      VoiceXmlDialogueContext voiceXmlDialogueContext) throws StepRendererException {
+    Assert.notNull(turn, "turn");
+    Document voiceXmlDocument;
+    try {
+      voiceXmlDocument = turn.getVoiceXmlDocument(voiceXmlDialogueContext);
+    } catch (VoiceXmlDocumentRenderingException exception) {
+      throw new StepRendererException(exception);
     }
 
-    @Override
-    public ServletResponseContent createDocumentForOutputTurn(VoiceXmlOutputTurn outputTurn,
-                                                              HttpServletRequest request,
-                                                              HttpServletResponse response,
-                                                              VoiceXmlDialogueContext voiceXmlDialogueContext)
-            throws StepRendererException {
-        return renderTurn(outputTurn, voiceXmlDialogueContext);
+    try {
+      if (mVoiceXmlDocumentAdapters != null) {
+        for (VoiceXmlDocumentAdapter adapter : mVoiceXmlDocumentAdapters) {
+          adapter.adaptVoiceXmlDocument(voiceXmlDocument);
+        }
+      }
+    } catch (VoiceXmlDocumentRenderingException exception) {
+      throw new StepRendererException("Error white applying adapter.", exception);
     }
 
-    @Override
-    public ServletResponseContent createDocumentForLastTurn(VoiceXmlLastTurn lastTurn,
-                                                            HttpServletRequest request,
-                                                            HttpServletResponse response,
-                                                            VoiceXmlDialogueContext voiceXmlDialogueContext)
-            throws StepRendererException {
-        return renderTurn(lastTurn, voiceXmlDialogueContext);
+    voiceXmlDialogueContext.incrementTurnIndex();
+    try {
+      return new XmlDocumentServletResponseContent(voiceXmlDocument, VOICE_XML_MIME_TYPE);
+    } catch (IOException exception) {
+      throw new StepRendererException("Unable to create response.", exception);
     }
-
-    private ServletResponseContent renderTurn(VoiceXmlDocumentTurn turn, VoiceXmlDialogueContext voiceXmlDialogueContext)
-            throws StepRendererException {
-        Assert.notNull(turn, "turn");
-        Document voiceXmlDocument;
-        try {
-            voiceXmlDocument = turn.getVoiceXmlDocument(voiceXmlDialogueContext);
-        } catch (VoiceXmlDocumentRenderingException exception) {
-            throw new StepRendererException(exception);
-        }
-
-        try {
-            if (mVoiceXmlDocumentAdapters != null) {
-                for (VoiceXmlDocumentAdapter adapter : mVoiceXmlDocumentAdapters) {
-                    adapter.adaptVoiceXmlDocument(voiceXmlDocument);
-                }
-            }
-        } catch (VoiceXmlDocumentRenderingException exception) {
-            throw new StepRendererException("Error white applying adapter.", exception);
-        }
-
-        voiceXmlDialogueContext.incrementTurnIndex();
-        try {
-            return new XmlDocumentServletResponseContent(voiceXmlDocument, VOICE_XML_MIME_TYPE);
-        } catch (IOException exception) {
-            throw new StepRendererException("Unable to create response.", exception);
-        }
-    }
+  }
 
 }
