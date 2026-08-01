@@ -67,7 +67,7 @@ subprojects {
                     // See https://docs.sonatype.org/display/Repository/Sonatype+OSS+Maven+Repository+Usage+Guide#SonatypeOSSMavenRepositoryUsageGuide-6.CentralSyncRequirement
                     pom {
                         name = 'rivr'
-                        description = 'Rivr is a lightweight open-source dialogue engine enabling flexible VoiceXML web application development for the agile Java developer and enterprise. Forked by Andrew Bishop updated for Java 17 with Jakarta namespace.'
+                        description = 'Rivr is a lightweight open-source dialogue engine enabling flexible VoiceXML web application development for the agile Java developer and enterprise. Updated for Java 21 with Jakarta namespace.'
                         url = 'https://github.com/AndrewDBishop/rivr'
 
                         scm {
