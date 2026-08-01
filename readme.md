@@ -1,12 +1,43 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Javadocs](https://www.javadoc.io/badge/com.nuecho/rivr-voicexml.svg)](https://nuecho.github.io/rivr/javadoc/)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.nuecho/rivr-voicexml/badge.svg?cache=foo)](https://maven-badges.herokuapp.com/maven-central/com.nuecho/rivr-voicexml)
+[![Java 21](https://img.shields.io/badge/Java-21-orange.svg)](https://www.oracle.com/java/)
+[![Jakarta EE 10](https://img.shields.io/badge/Jakarta%20EE-10-blue.svg)](https://jakarta.ee/)
 
-## Andrew's Updates
+## Andrew's Fork & Modernization Updates
 
-I have updated the source code to work with Java 21, but I am not a Gradle guy at all, so I broke most of the Gradle build stuff to get this to compile.
-If one of the NuEcho guys finds this, feel free to grab all my work and update your version to publish to Maven Central. 
-For now the only way to use this is to build the jars locally and add them to your project manually. Being a Maven guy I just added a lib folder under my src/main/resources to hold the jars and reference them in my pom.xml as system dependencies.
+This repository is a modern fork of Rivr updated to run on **Java 21 (LTS)** and **Jakarta EE 10+** application servers (such as Tomcat 10.1+ and Spring Boot 3+).
+
+### Key Modernization Features
+
+* **Java 21 Support**: Modernized source and target compilation compatibility to Java 21.
+* **Jakarta EE Migration**: Converted all `javax.servlet` packages to `jakarta.servlet` and updated dependencies to Jakarta JSON-P (`jakarta.json-api` 2.1+) and Commons FileUpload 2.x for Jakarta EE 10+ servlet support.
+* **Apache Maven Support**: Added a complete multi-module Maven build structure (`pom.xml`) alongside Gradle, allowing seamless integration with Maven workflows and IDEs like Eclipse / Spring Tool Suite (STS).
+* **Automated Code Quality & Testing**: Configured Maven plugins for JUnit 5, Checkstyle, and Javadoc generation.
+
+### Quick Start with Maven
+
+To build and install the Rivr modules into your local Maven repository (`~/.m2/repository`):
+
+```bash
+git clone https://github.com/AndrewDBishop/rivr.git
+cd rivr
+git checkout maven-build
+mvn clean install
+```
+
+To use Rivr in your Maven project, add `rivr-voicexml` to your application's `pom.xml`:
+
+```xml
+<dependency>
+    <groupId>com.nuecho</groupId>
+    <artifactId>rivr-voicexml</artifactId>
+    <version>1.0.13</version>
+</dependency>
+```
+
+For Eclipse / Spring Tool Suite (STS) users, import the project directly via **File → Import... → Existing Maven Projects**.
+
+---
+
 ## Overview
 
 Rivr is a lightweight open-source dialogue engine enabling Java developers to easily create enterprise-grade VoiceXML applications.
@@ -40,64 +71,53 @@ VoiceXML is primarily targeted at contact center environments and over-the-phone
 
 ### What is required to _develop_ a VoiceXML application with Rivr?
 
-You should have a Java development environment.  Also, you should already be familiar with the Java language and Java Servlets. While not essential at the beginning, it can be very useful to understand some basic notions of VoiceXML such as prompt queuing, barge-in, properties, etc.  Since the Rivr model is based on VoiceXML, it is sometimes necessary to understand the VoiceXML layer underneath.
+You should have a Java 21 development environment and Maven or Gradle. Also, you should already be familiar with the Java language and Jakarta Servlets. While not essential at the beginning, it can be very useful to understand some basic notions of VoiceXML such as prompt queuing, barge-in, properties, etc. Since the Rivr model is based on VoiceXML, it is sometimes necessary to understand the VoiceXML layer underneath.
 
 ### What is required to _run_ a VoiceXML application with Rivr?
 
 You should have:
 
 1. A VoiceXML-compliant platform (VoiceXML 2.1)
-2. A Java web application server (or minimally a _Java Servlet container_)
+2. A Jakarta EE 10+ web application server / Servlet container (e.g. Tomcat 10.1+)
 3. A Java web application (i.e. a WAR file) containing:
-    1. the Rivr jar files (rivr-core.jar, rivr-voicexml.jar)
-    2. the run-time dependencies
-        1. slf4j-api.jar, an SLF4J adapter jar for a given logging framework and the required logging framework jar files.
-        2. commons-fileupload.jar
-        3. jakarta.json-api.jar and an implementation (see GlassFish project for the reference implementation)
+    1. the Rivr jar files (`rivr-core-1.0.13.jar`, `rivr-voicexml-1.0.13.jar`)
+    2. the run-time dependencies:
+        1. `slf4j-api.jar` and an SLF4J adapter
+        2. `commons-fileupload2-jakarta-servlet6.jar`
+        3. `jakarta.json-api.jar` and an implementation (e.g. GlassFish `org.glassfish:jakarta.json`)
     3. your Rivr application (minimally a Dialogue class)
-    4. the appropriate configuration in web.xml
+    4. the appropriate configuration in `web.xml`
 
 ### What benefits Rivr offers?
 
 #### Rivr allows Java developers to write callflows as programs.
 
-The callflow logic is expressed directly in the code. For example, if the call flow required a question to be asked no more than 3 times, this can be implemented with a simple `for` loop.  No need to fiddle with the VoiceXML Form Interpretation Algorithm (FIA).
+The callflow logic is expressed directly in the code. For example, if the call flow required a question to be asked no more than 3 times, this can be implemented with a simple `for` loop. No need to fiddle with the VoiceXML Form Interpretation Algorithm (FIA).
 
 #### All application logic in centralized in the Java code on the server-side.
 
-With Rivr, no dialogue logic resides on the VoiceXML side.  Dialogue rules can be expressed and controlled from the Java side.  The dialogue state is maintained on the server.
+With Rivr, no dialogue logic resides on the VoiceXML side. Dialogue rules can be expressed and controlled from the Java side. The dialogue state is maintained on the server.
 
 #### Rivr allows unit and coverage testing.
 
-Since Rivr dialogues are regular Java methods, they can be unit tested as any other regular Java code.  It is simple to check with JUnit that a dialogue asks the expected questions and reacts correctly for any simulated user input. By combining the unit tests with a code coverage tool, we can rapidly setup an automated call flow coverage verification solution.
+Since Rivr dialogues are regular Java methods, they can be unit tested as any other regular Java code. It is simple to check with JUnit that a dialogue asks the expected questions and reacts correctly for any simulated user input. By combining the unit tests with a code coverage tool, we can rapidly setup an automated call flow coverage verification solution.
 
 #### Development of application can start early in the project, even before VoiceXML platform is ready.
 
-Development can start as soon as the dialogue specification is available. Rivr offers a VoiceXML simulation tool, _the dialogue runner_, which allows developers to interactively test the dialogues they are developing.  Unit testing can also starts as soon as we have a working dialogue (which can be within minutes).
+Development can start as soon as the dialogue specification is available. Rivr offers a VoiceXML simulation tool, _the dialogue runner_, which allows developers to interactively test the dialogues they are developing. Unit testing can also starts as soon as we have a working dialogue (which can be within minutes).
 
 #### Dialogue abstraction, modularity and reuse.
 
-The fact that a dialogue is pure Java code, it's easy to make them abstract.  For example, one can define a dialogue as a Java method taking input parameters which will condition the dialogue execution.  Those dialogues can be placed into reusable Java packages and shared between applications.
+The fact that a dialogue is pure Java code, it's easy to make them abstract. For example, one can define a dialogue as a Java method taking input parameters which will condition the dialogue execution. Those dialogues can be placed into reusable Java packages and shared between applications.
 
 It's even possible to define meta-dialogues, i.e. high-order dialogue composing dialogues together. This level of abstraction is very hard to obtain when using VoiceXML directly but is easily achieved with Rivr.
 
 #### No additional tools required
 
-Rivr only requires standard Java tools, no special software or other design-time environment.  Java already offers tons of tools that can be applied to the Rivr dialogues: debuggers, profilers, coverage tools, javadoc, etc.
+Rivr only requires standard Java tools, no special software or other design-time environment. Java already offers tons of tools that can be applied to the Rivr dialogues: debuggers, profilers, coverage tools, javadoc, etc.
 
 #### Flexibility
 
-Rivr is designed not to get in your way. It can be integrated with any enterprise framework or other existing framework (like Spring).  Many points of control has been defined in Rivr, you are never stuck.  You can provide your own implementations for many concepts and you can override many classes to fit your custom context.
+Rivr is designed not to get in your way. It can be integrated with any enterprise framework or other existing framework (like Spring Boot 3+). Many points of control has been defined in Rivr, you are never stuck. You can provide your own implementations for many concepts and you can override many classes to fit your custom context.
 
-Rivr even works with VoiceXML proprietary extensions.  You can customize generated VoiceXML as required by your VoiceXML platform and exploit vendor-specific features. There are a few ways to do that.
-
-### How to get some support or report a bug?
-
-We have an email address for limited support: [rivr-support@nuecho.com](mailto:rivr-support@nuecho.com)
-
-Also, to report a problem, you can [open an issue on GitHub](https://github.com/nuecho/rivr/issues)
-
-### How to submit a patch?
-
-Send us your pull request on GitHub. It will then be evaluated.  Possibly, we will offer a work-around rather than modifying the code base.  We will not modify the VoiceXML generation to fit a particular platform unless it can be done in compliance with the VoiceXML 2.1 spec.
-
+Rivr even works with VoiceXML proprietary extensions. You can customize generated VoiceXML as required by your VoiceXML platform and exploit vendor-specific features.
