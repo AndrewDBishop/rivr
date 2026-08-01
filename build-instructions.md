@@ -127,3 +127,30 @@ war {
 ```
 
 (See the Gradle documentation for more information on war overlaying.)
+
+## Building with Maven
+
+To build Rivr using Apache Maven:
+
+1. Ensure Java 17+ and Maven 3.8+ are installed.
+2. Run:
+   ```bash
+   mvn clean install
+   ```
+
+This will build all modules and install `rivr-core` and `rivr-voicexml` artifacts into your local Maven repository (`~/.m2/repository`).
+
+### Importing into Eclipse / Spring Tool Suite (STS)
+
+1. Open Spring Tool Suite / Eclipse.
+2. Select **File -> Import... -> Existing Maven Projects**.
+3. Browse to the root `rivr` directory and finish.
+4. Add `rivr-core` or `rivr-voicexml` as a dependency in your application's `pom.xml`:
+
+```xml
+<dependency>
+    <groupId>com.nuecho</groupId>
+    <artifactId>rivr-voicexml</artifactId>
+    <version>1.0.13</version>
+</dependency>
+```
