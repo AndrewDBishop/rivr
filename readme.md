@@ -148,6 +148,13 @@ Contributions, bug reports, and pull requests are welcome!
 
 ---
 
+## Acknowledgments & Credits
+
+* **Original Author**: Created and maintained by [Nu Echo](https://github.com/nuecho/rivr).
+* **Modernization & Maintenance**: Modernized for Java 21, Jakarta EE 10+, and Apache Maven build support by Andrew Bishop with assistance from **Rool Machine** (`machine@rool.app`).
+
+---
+
 ## License
 
 This project is licensed under the Apache License 2.0. See the original Nu Echo copyright headers in individual source files for details.
