@@ -132,7 +132,7 @@ war {
 
 To build Rivr using Apache Maven:
 
-1. Ensure Java 17+ and Maven 3.8+ are installed.
+1. Ensure Java 21+ and Maven 3.8+ are installed.
 2. Run:
    ```bash
    mvn clean install

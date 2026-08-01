@@ -4,7 +4,7 @@
 
 ## Andrew's Updates
 
-I have updated the source code to work with Java 17, but I am not a Gradle guy at all, so I broke most of the Gradle build stuff to get this to compile.
+I have updated the source code to work with Java 21, but I am not a Gradle guy at all, so I broke most of the Gradle build stuff to get this to compile.
 If one of the NuEcho guys finds this, feel free to grab all my work and update your version to publish to Maven Central. 
 For now the only way to use this is to build the jars locally and add them to your project manually. Being a Maven guy I just added a lib folder under my src/main/resources to hold the jars and reference them in my pom.xml as system dependencies.
 ## Overview

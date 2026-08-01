@@ -15,8 +15,8 @@ configure(javaProjects) {
    // }
 
   //  checkstyle.configFile = rootProject.file('checkstyle/checkstyle.xml')
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 
     // Fix for "Unable to get class information" message in checkstyle
   //  checkstyleMain {
